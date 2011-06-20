@@ -5,6 +5,7 @@ import java.io.IOException;
 import net.trajano.berkeleydbhttpcachestorage.BerkeleyDBHttpCacheStorageException;
 
 import org.apache.http.client.cache.HttpCacheEntry;
+import org.apache.http.client.cache.HttpCacheStorage;
 import org.apache.http.client.cache.HttpCacheUpdateCallback;
 import org.apache.http.client.cache.HttpCacheUpdateException;
 
@@ -14,6 +15,15 @@ import com.sleepycat.je.DatabaseException;
 import com.sleepycat.je.OperationStatus;
 import com.sleepycat.je.Transaction;
 
+/**
+ * This wraps a {@link Database} to provide methods that would match against
+ * {@link HttpCacheStorage} with an extra parameter for the transaction.
+ * Non-transactional databases will pass in <code>null</code> as the
+ * {@link Transaction} parameter.
+ * 
+ * @author Archimedes Trajano
+ * 
+ */
 public class BerkeleyDBCacheDatabase {
 	/**
 	 * Berkeley DB.
@@ -24,6 +34,7 @@ public class BerkeleyDBCacheDatabase {
 	 * Constructs the cache.
 	 * 
 	 * @param database
+	 *            database to wrap.
 	 */
 	public BerkeleyDBCacheDatabase(final Database database) {
 		this.database = database;
