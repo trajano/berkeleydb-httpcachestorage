@@ -1,0 +1,1 @@
+A BerkeleyDB backed HttpCacheStorage to be used with CachingHttpClient of HttpClient project.
