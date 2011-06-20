@@ -24,9 +24,27 @@ import com.sleepycat.je.DatabaseConfig;
 import com.sleepycat.je.Environment;
 import com.sleepycat.je.EnvironmentConfig;
 
+/**
+ * Tests {@link BerkeleyDBHttpCacheStorage}.
+ * 
+ * @author Archimedes Trajano
+ * 
+ */
 public class BerkeleyDBHttpCacheStorageTest {
+	/**
+	 * Test directory.
+	 */
 	private final File testDirectory = new File("target/testing/storage");
 
+	/**
+	 * Gets an object and returns the time it took in nanoseconds.
+	 * 
+	 * @param httpClient
+	 *            HTTP Client
+	 * @return time it took for the operation to complete in nanoseconds.
+	 * @throws IOException
+	 *             I/O error had occurred.
+	 */
 	private long doRequest(final HttpClient httpClient) throws IOException {
 		final long start = System.nanoTime();
 		final HttpResponse response = httpClient
@@ -39,6 +57,12 @@ public class BerkeleyDBHttpCacheStorageTest {
 		return System.nanoTime() - start;
 	}
 
+	/**
+	 * Creates the test directory.
+	 * 
+	 * @throws IOException
+	 *             I/O error had occurred.
+	 */
 	@Before
 	public void setUp() throws IOException {
 		FileUtils.deleteDirectory(testDirectory);
@@ -46,12 +70,24 @@ public class BerkeleyDBHttpCacheStorageTest {
 		Assert.assertTrue(testDirectory.exists());
 	}
 
+	/**
+	 * Removes the test directory.
+	 * 
+	 * @throws IOException
+	 *             I/O error had occurred.
+	 */
 	@After
 	public void tearDown() throws IOException {
 		FileUtils.deleteDirectory(testDirectory);
 		Assert.assertFalse(testDirectory.exists());
 	}
 
+	/**
+	 * Tests the creation of the object.
+	 * 
+	 * @throws Exception
+	 *             error had occurred.
+	 */
 	@Test
 	public void testCreate() throws Exception {
 		final EnvironmentConfig environmentConfig = new EnvironmentConfig();
@@ -67,6 +103,12 @@ public class BerkeleyDBHttpCacheStorageTest {
 		env.close();
 	}
 
+	/**
+	 * Tests multiple requests, the second request should take less time.
+	 * 
+	 * @throws Exception
+	 *             error had occurred.
+	 */
 	@Test
 	public void testDoMultipleRequest() throws Exception {
 		final EnvironmentConfig environmentConfig = new EnvironmentConfig();
@@ -87,6 +129,12 @@ public class BerkeleyDBHttpCacheStorageTest {
 		env.close();
 	}
 
+	/**
+	 * Tests a single request.
+	 * 
+	 * @throws Exception
+	 *             error had occurred.
+	 */
 	@Test
 	public void testDoRequest() throws Exception {
 		final EnvironmentConfig environmentConfig = new EnvironmentConfig();
