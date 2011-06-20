@@ -14,6 +14,7 @@ import org.apache.http.impl.client.cache.DefaultHttpCacheEntrySerializer;
 import com.sleepycat.je.Database;
 import com.sleepycat.je.DatabaseEntry;
 import com.sleepycat.je.DatabaseException;
+import com.sleepycat.je.LockMode;
 import com.sleepycat.je.OperationStatus;
 import com.sleepycat.je.Transaction;
 
@@ -66,7 +67,7 @@ public class BerkeleyDBCacheDatabase {
 		try {
 			final DatabaseEntry data = new DatabaseEntry();
 			final OperationStatus status = database.get(txn, new DatabaseEntry(
-					key.getBytes()), data, null);
+					key.getBytes()), data, LockMode.READ_COMMITTED);
 			if (status == OperationStatus.NOTFOUND) {
 				return null;
 			} else if (status == OperationStatus.SUCCESS) {
@@ -159,7 +160,7 @@ public class BerkeleyDBCacheDatabase {
 			// Made not final as this will get replaced.
 			HttpCacheEntry entry;
 			final OperationStatus status = database.get(txn, new DatabaseEntry(
-					key.getBytes()), data, null);
+					key.getBytes()), data, LockMode.READ_COMMITTED);
 			if (status == OperationStatus.NOTFOUND) {
 				entry = null;
 			} else if (status == OperationStatus.SUCCESS) {
