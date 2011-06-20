@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>net.trajano</groupId>
 	<artifactId>berkeleydb-httpcachestorage</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<name>BerkeleyDB HttpCacheStorage </name>
 	<description>A BerkeleyDB backed HttpCacheStorage to be used with CachingHttpClient of HttpClient project.</description>
 	<inceptionYear>2011</inceptionYear>
@@ -37,6 +37,15 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+	<scm>
+		<connection>scm:git:git://github.com/trajano/berkeleydb-httpcachestorage.git</connection>
+		<developerConnection>scm:git:git@github.com:trajano/berkeleydb-httpcachestorage.git</developerConnection>
+		<url>https://github.com/trajano/berkeleydb-httpcachestorage</url>
+	</scm>
+	<organization>
+		<name>trajano.net</name>
+		<url>http://www.trajano.net/</url>
+	</organization>
 	<repositories>
 		<repository>
 			<id>oracleReleases</id>
