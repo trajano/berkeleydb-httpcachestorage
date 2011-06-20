@@ -2,7 +2,7 @@ package net.trajano.berkeleydbhttpcachestorage.internal;
 
 import java.io.IOException;
 
-import net.trajano.berkeleydbhttpcachestorage.BerkleyDBHttpCacheStorageException;
+import net.trajano.berkeleydbhttpcachestorage.BerkeleyDBHttpCacheStorageException;
 
 import org.apache.http.client.cache.HttpCacheEntry;
 import org.apache.http.client.cache.HttpCacheUpdateCallback;
@@ -41,7 +41,7 @@ public class BerkeleyDBCacheDatabase {
 				return HttpCacheEntrySerializer.byteArrayToHttpCacheEntry(data
 						.getData());
 			} else {
-				throw new BerkleyDBHttpCacheStorageException(key, status);
+				throw new BerkeleyDBHttpCacheStorageException(key, status);
 			}
 
 		} catch (final DatabaseException e) {
@@ -58,7 +58,7 @@ public class BerkeleyDBCacheDatabase {
 			final OperationStatus status = database.put(txn, new DatabaseEntry(
 					key.getBytes()), data);
 			if (status != OperationStatus.SUCCESS) {
-				throw new BerkleyDBHttpCacheStorageException(key, status);
+				throw new BerkeleyDBHttpCacheStorageException(key, status);
 			}
 		} catch (final DatabaseException e) {
 			throw new IOException(e);
@@ -72,7 +72,7 @@ public class BerkeleyDBCacheDatabase {
 					new DatabaseEntry(key.getBytes()));
 			if (status != OperationStatus.SUCCESS
 					|| status != OperationStatus.NOTFOUND) {
-				throw new BerkleyDBHttpCacheStorageException(key, status);
+				throw new BerkeleyDBHttpCacheStorageException(key, status);
 			}
 		} catch (final DatabaseException e) {
 			throw new IOException(e);
@@ -95,7 +95,7 @@ public class BerkeleyDBCacheDatabase {
 				entry = HttpCacheEntrySerializer.byteArrayToHttpCacheEntry(data
 						.getData());
 			} else {
-				throw new BerkleyDBHttpCacheStorageException(key, status);
+				throw new BerkeleyDBHttpCacheStorageException(key, status);
 			}
 			entry = callback.update(entry);
 
@@ -104,7 +104,7 @@ public class BerkeleyDBCacheDatabase {
 			final OperationStatus putStatus = database.put(txn,
 					new DatabaseEntry(key.getBytes()), data);
 			if (putStatus != OperationStatus.SUCCESS) {
-				throw new BerkleyDBHttpCacheStorageException(key, putStatus);
+				throw new BerkeleyDBHttpCacheStorageException(key, putStatus);
 			}
 		} catch (final DatabaseException e) {
 			throw new IOException(e);

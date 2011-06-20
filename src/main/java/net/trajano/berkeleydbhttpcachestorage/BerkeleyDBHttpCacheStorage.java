@@ -11,7 +11,7 @@ import org.apache.http.client.cache.HttpCacheUpdateException;
 
 import com.sleepycat.je.Database;
 
-public class BerkleyDBHttpCacheStorage implements HttpCacheStorage {
+public class BerkeleyDBHttpCacheStorage implements HttpCacheStorage {
 	/**
 	 * Berkeley Cache DB.
 	 */
@@ -22,7 +22,7 @@ public class BerkleyDBHttpCacheStorage implements HttpCacheStorage {
 	 * 
 	 * @param database
 	 */
-	public BerkleyDBHttpCacheStorage(final Database database) {
+	public BerkeleyDBHttpCacheStorage(final Database database) {
 		this.database = new BerkeleyDBCacheDatabase(database);
 	}
 

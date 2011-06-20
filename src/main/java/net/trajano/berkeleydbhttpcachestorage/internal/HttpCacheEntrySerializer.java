@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
-import net.trajano.berkeleydbhttpcachestorage.BerkleyDBHttpCacheStorageClassNotFoundException;
+import net.trajano.berkeleydbhttpcachestorage.BerkeleyDBHttpCacheStorageClassNotFoundException;
 
 import org.apache.http.client.cache.HttpCacheEntry;
 
@@ -18,7 +18,7 @@ public final class HttpCacheEntrySerializer {
 		try {
 			return (HttpCacheEntry) objectInputStream.readObject();
 		} catch (final ClassNotFoundException e) {
-			throw new BerkleyDBHttpCacheStorageClassNotFoundException(e);
+			throw new BerkeleyDBHttpCacheStorageClassNotFoundException(e);
 		} finally {
 			objectInputStream.close();
 		}

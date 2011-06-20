@@ -14,7 +14,7 @@ import com.sleepycat.je.Environment;
 import com.sleepycat.je.Transaction;
 
 /**
- * This is a version of the {@link BerkleyDBHttpCacheStorage} that supports
+ * This is a version of the {@link BerkeleyDBHttpCacheStorage} that supports
  * transactions. In addition to the database, the environment needs to be
  * specified as well.
  * 

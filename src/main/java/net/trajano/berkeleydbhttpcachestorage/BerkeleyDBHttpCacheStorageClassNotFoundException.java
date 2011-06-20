@@ -2,7 +2,7 @@ package net.trajano.berkeleydbhttpcachestorage;
 
 import java.io.IOException;
 
-public class BerkleyDBHttpCacheStorageClassNotFoundException extends
+public class BerkeleyDBHttpCacheStorageClassNotFoundException extends
 		IOException {
 	/**
 	 * 
@@ -13,7 +13,7 @@ public class BerkleyDBHttpCacheStorageClassNotFoundException extends
 	 */
 	private final ClassNotFoundException e;
 
-	public BerkleyDBHttpCacheStorageClassNotFoundException(
+	public BerkeleyDBHttpCacheStorageClassNotFoundException(
 			final ClassNotFoundException e) {
 		this.e = e;
 	}

@@ -4,7 +4,7 @@ import java.io.IOException;
 
 import com.sleepycat.je.OperationStatus;
 
-public class BerkleyDBHttpCacheStorageException extends IOException {
+public class BerkeleyDBHttpCacheStorageException extends IOException {
 
 	/**
 	 * 
@@ -13,7 +13,7 @@ public class BerkleyDBHttpCacheStorageException extends IOException {
 	private final String key;
 	private final OperationStatus status;
 
-	public BerkleyDBHttpCacheStorageException(final String key,
+	public BerkeleyDBHttpCacheStorageException(final String key,
 			final OperationStatus status) {
 		this.key = key;
 		this.status = status;
