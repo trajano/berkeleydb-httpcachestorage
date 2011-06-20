@@ -7,7 +7,7 @@ import com.sleepycat.je.OperationStatus;
 public class BerkeleyDBHttpCacheStorageException extends IOException {
 
 	/**
-	 * 
+	 * Serial version ID.
 	 */
 	private static final long serialVersionUID = 6381754475995443701L;
 	private final String key;

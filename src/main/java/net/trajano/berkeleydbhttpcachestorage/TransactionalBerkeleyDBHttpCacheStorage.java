@@ -18,10 +18,11 @@ import com.sleepycat.je.Transaction;
  * transactions. In addition to the database, the environment needs to be
  * specified as well.
  * 
- * @author TRAJAA2
+ * @author Archimedes Trajano
  * 
  */
-public class TransactionalBerkeleyDBHttpCacheStorage implements HttpCacheStorage {
+public class TransactionalBerkeleyDBHttpCacheStorage implements
+		HttpCacheStorage {
 	/**
 	 * Berkeley Cache DB.
 	 */
@@ -38,6 +39,7 @@ public class TransactionalBerkeleyDBHttpCacheStorage implements HttpCacheStorage
 	 * @param environment
 	 *            Berkeley DB environment.
 	 * @param database
+	 *            database.
 	 */
 	public TransactionalBerkeleyDBHttpCacheStorage(
 			final Environment environment, final Database database) {
@@ -45,6 +47,9 @@ public class TransactionalBerkeleyDBHttpCacheStorage implements HttpCacheStorage
 		this.database = new BerkeleyDBCacheDatabase(database);
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public HttpCacheEntry getEntry(final String key) throws IOException {
 		final Transaction txn = environment.beginTransaction(null, null);
 		try {
@@ -57,6 +62,9 @@ public class TransactionalBerkeleyDBHttpCacheStorage implements HttpCacheStorage
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public void putEntry(final String key, final HttpCacheEntry entry)
 			throws IOException {
 		final Transaction txn = environment.beginTransaction(null, null);
@@ -70,6 +78,9 @@ public class TransactionalBerkeleyDBHttpCacheStorage implements HttpCacheStorage
 
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public void removeEntry(final String key) throws IOException {
 		final Transaction txn = environment.beginTransaction(null, null);
 		try {
@@ -81,6 +92,9 @@ public class TransactionalBerkeleyDBHttpCacheStorage implements HttpCacheStorage
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public void updateEntry(final String key,
 			final HttpCacheUpdateCallback callback) throws IOException,
 			HttpCacheUpdateException {
