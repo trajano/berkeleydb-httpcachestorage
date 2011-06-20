@@ -11,9 +11,10 @@ import org.apache.http.client.cache.HttpCacheEntrySerializer;
 import org.apache.http.client.cache.HttpCacheUpdateCallback;
 import org.apache.http.impl.client.cache.DefaultHttpCacheEntrySerializer;
 
+import com.sleepycat.je.Cursor;
+import com.sleepycat.je.CursorConfig;
 import com.sleepycat.je.Database;
 import com.sleepycat.je.DatabaseEntry;
-import com.sleepycat.je.DatabaseException;
 import com.sleepycat.je.LockMode;
 import com.sleepycat.je.OperationStatus;
 import com.sleepycat.je.Transaction;
@@ -64,21 +65,17 @@ public class BerkeleyDBCacheDatabase {
 	 */
 	public HttpCacheEntry getEntry(final Transaction txn, final String key)
 			throws IOException {
-		try {
-			final DatabaseEntry data = new DatabaseEntry();
-			final OperationStatus status = database.get(txn, new DatabaseEntry(
-					key.getBytes()), data, LockMode.READ_COMMITTED);
-			if (status == OperationStatus.NOTFOUND) {
-				return null;
-			} else if (status == OperationStatus.SUCCESS) {
-				return serializer.readFrom(new ByteArrayInputStream(data
-						.getData()));
-			} else {
-				throw new BerkeleyDBHttpCacheStorageException(key, status);
-			}
-
-		} catch (final DatabaseException e) {
-			throw new IOException(e);
+		final DatabaseEntry data = new DatabaseEntry();
+		final OperationStatus status = database.get(txn,
+				new DatabaseEntry(key.getBytes()), data,
+				LockMode.READ_COMMITTED);
+		if (status == OperationStatus.NOTFOUND) {
+			return null;
+		} else if (status == OperationStatus.SUCCESS) {
+			return serializer
+					.readFrom(new ByteArrayInputStream(data.getData()));
+		} else {
+			throw new BerkeleyDBHttpCacheStorageException(key, status);
 		}
 	}
 
@@ -98,18 +95,14 @@ public class BerkeleyDBCacheDatabase {
 	 */
 	public void putEntry(final Transaction txn, final String key,
 			final HttpCacheEntry entry) throws IOException {
-		try {
-			final DatabaseEntry data = new DatabaseEntry();
-			final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			serializer.writeTo(entry, baos);
-			data.setData(baos.toByteArray());
-			final OperationStatus status = database.put(txn, new DatabaseEntry(
-					key.getBytes()), data);
-			if (status != OperationStatus.SUCCESS) {
-				throw new BerkeleyDBHttpCacheStorageException(key, status);
-			}
-		} catch (final DatabaseException e) {
-			throw new IOException(e);
+		final DatabaseEntry data = new DatabaseEntry();
+		final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		serializer.writeTo(entry, baos);
+		data.setData(baos.toByteArray());
+		final OperationStatus status = database.put(txn,
+				new DatabaseEntry(key.getBytes()), data);
+		if (status != OperationStatus.SUCCESS) {
+			throw new BerkeleyDBHttpCacheStorageException(key, status);
 		}
 	}
 
@@ -126,21 +119,17 @@ public class BerkeleyDBCacheDatabase {
 	 */
 	public void removeEntry(final Transaction txn, final String key)
 			throws IOException {
-		try {
-			final OperationStatus status = database.delete(txn,
-					new DatabaseEntry(key.getBytes()));
-			if (status != OperationStatus.SUCCESS
-					&& status != OperationStatus.NOTFOUND) {
-				throw new BerkeleyDBHttpCacheStorageException(key, status);
-			}
-		} catch (final DatabaseException e) {
-			throw new IOException(e);
+		final OperationStatus status = database.delete(txn, new DatabaseEntry(
+				key.getBytes()));
+		if (status != OperationStatus.SUCCESS
+				&& status != OperationStatus.NOTFOUND) {
+			throw new BerkeleyDBHttpCacheStorageException(key, status);
 		}
-
 	}
 
 	/**
-	 * Updates the entry on the database.
+	 * Updates the entry on the database. It does this using a {@link Cursor}
+	 * and an update rather than doing a get and put for efficiency.
 	 * 
 	 * @see org.apache.http.client.cache.HttpCacheStorage#updateEntry(String,
 	 *      HttpCacheUpdateCallback)
@@ -155,33 +144,31 @@ public class BerkeleyDBCacheDatabase {
 	 */
 	public void updateEntry(final Transaction txn, final String key,
 			final HttpCacheUpdateCallback callback) throws IOException {
-		try {
-			final DatabaseEntry data = new DatabaseEntry();
-			// Made not final as this will get replaced.
-			HttpCacheEntry entry;
-			final OperationStatus status = database.get(txn, new DatabaseEntry(
-					key.getBytes()), data, LockMode.READ_COMMITTED);
-			if (status == OperationStatus.NOTFOUND) {
-				entry = null;
-			} else if (status == OperationStatus.SUCCESS) {
-				entry = serializer.readFrom(new ByteArrayInputStream(data
-						.getData()));
-			} else {
-				throw new BerkeleyDBHttpCacheStorageException(key, status);
-			}
-			entry = callback.update(entry);
 
-			final ByteArrayOutputStream baos = new ByteArrayOutputStream(
-					data.getSize());
-			serializer.writeTo(entry, baos);
-			data.setData(baos.toByteArray());
-			final OperationStatus putStatus = database.put(txn,
-					new DatabaseEntry(key.getBytes()), data);
-			if (putStatus != OperationStatus.SUCCESS) {
-				throw new BerkeleyDBHttpCacheStorageException(key, putStatus);
-			}
-		} catch (final DatabaseException e) {
-			throw new IOException(e);
+		final DatabaseEntry data = new DatabaseEntry();
+		// Made not final as this will get replaced.
+		HttpCacheEntry entry;
+		final Cursor cursor = database.openCursor(txn,
+				CursorConfig.READ_COMMITTED);
+		final OperationStatus status = cursor.getSearchKey(new DatabaseEntry(
+				key.getBytes()), data, LockMode.READ_COMMITTED);
+		if (status == OperationStatus.NOTFOUND) {
+			entry = null;
+		} else if (status == OperationStatus.SUCCESS) {
+			entry = serializer
+					.readFrom(new ByteArrayInputStream(data.getData()));
+		} else {
+			throw new BerkeleyDBHttpCacheStorageException(key, status);
+		}
+		entry = callback.update(entry);
+
+		final ByteArrayOutputStream baos = new ByteArrayOutputStream(
+				data.getSize());
+		serializer.writeTo(entry, baos);
+		data.setData(baos.toByteArray());
+		final OperationStatus putStatus = cursor.putCurrent(data);
+		if (putStatus != OperationStatus.SUCCESS) {
+			throw new BerkeleyDBHttpCacheStorageException(key, putStatus);
 		}
 	}
 }
