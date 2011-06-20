@@ -3,7 +3,6 @@ package net.trajano.berkeleydbhttpcachestorage.test;
 import java.io.File;
 import java.io.IOException;
 
-import net.trajano.berkeleydbhttpcachestorage.BerkeleyDBHttpCacheStorage;
 import net.trajano.berkeleydbhttpcachestorage.TransactionalBerkeleyDBHttpCacheStorage;
 
 import org.apache.commons.io.FileUtils;
@@ -131,7 +130,7 @@ public class TransactionalBerkeleyDBHttpCacheStorageTest {
 
 		final long time1 = doRequest(httpClient);
 		final long time2 = doRequest(httpClient);
-		Assert.assertTrue(time2 < time1);
+		Assert.assertTrue(time2 <= time1);
 		db.close();
 		env.close();
 	}
@@ -146,13 +145,16 @@ public class TransactionalBerkeleyDBHttpCacheStorageTest {
 	public void testDoRequest() throws Exception {
 		final EnvironmentConfig environmentConfig = new EnvironmentConfig();
 		environmentConfig.setAllowCreate(true);
+		environmentConfig.setTransactional(true);
 		final Environment env = new Environment(testDirectory,
 				environmentConfig);
 		final DatabaseConfig databaseConfig = new DatabaseConfig();
 		databaseConfig.setAllowCreate(true);
+		databaseConfig.setTransactional(true);
 		final Database db = env.openDatabase(null, "cache", databaseConfig);
 		final HttpClient httpClient = new CachingHttpClient(
-				new DefaultHttpClient(), new BerkeleyDBHttpCacheStorage(db),
+				new DefaultHttpClient(),
+				new TransactionalBerkeleyDBHttpCacheStorage(env, db),
 				new CacheConfig());
 
 		final HttpResponse response = httpClient.execute(new HttpGet(
@@ -164,6 +166,42 @@ public class TransactionalBerkeleyDBHttpCacheStorageTest {
 		EntityUtils.toByteArray(entity);
 		db.close();
 		env.close();
+	}
+
+	/**
+	 * Tests using a non-transactional {@link Database}. Should not work.
+	 * 
+	 * @throws Exception
+	 *             error had occurred.
+	 */
+	@Test(expected = UnsupportedOperationException.class)
+	public void testNonTransactional() throws Exception {
+		final EnvironmentConfig environmentConfig = new EnvironmentConfig();
+		environmentConfig.setAllowCreate(true);
+		environmentConfig.setTransactional(false);
+		final Environment env = new Environment(testDirectory,
+				environmentConfig);
+		final DatabaseConfig databaseConfig = new DatabaseConfig();
+		databaseConfig.setAllowCreate(true);
+		databaseConfig.setTransactional(false);
+		final Database db = env.openDatabase(null, "cache", databaseConfig);
+		try {
+			final HttpClient httpClient = new CachingHttpClient(
+					new DefaultHttpClient(),
+					new TransactionalBerkeleyDBHttpCacheStorage(env, db),
+					new CacheConfig());
+
+			final HttpResponse response = httpClient.execute(new HttpGet(
+					"http://slashdot.org"));
+
+			Assert.assertNotNull(response);
+			final HttpEntity entity = response.getEntity();
+			Assert.assertNotNull(entity);
+			EntityUtils.toByteArray(entity);
+		} finally {
+			db.close();
+			env.close();
+		}
 	}
 
 }

@@ -124,7 +124,7 @@ public class BerkeleyDBHttpCacheStorageTest {
 
 		final long time1 = doRequest(httpClient);
 		final long time2 = doRequest(httpClient);
-		Assert.assertTrue(time2 < time1);
+		Assert.assertTrue(time2 <= time1);
 		db.close();
 		env.close();
 	}
@@ -143,6 +143,38 @@ public class BerkeleyDBHttpCacheStorageTest {
 				environmentConfig);
 		final DatabaseConfig databaseConfig = new DatabaseConfig();
 		databaseConfig.setAllowCreate(true);
+		final Database db = env.openDatabase(null, "cache", databaseConfig);
+		final HttpClient httpClient = new CachingHttpClient(
+				new DefaultHttpClient(), new BerkeleyDBHttpCacheStorage(db),
+				new CacheConfig());
+
+		final HttpResponse response = httpClient.execute(new HttpGet(
+				"http://slashdot.org"));
+
+		Assert.assertNotNull(response);
+		final HttpEntity entity = response.getEntity();
+		Assert.assertNotNull(entity);
+		EntityUtils.toByteArray(entity);
+		db.close();
+		env.close();
+	}
+
+	/**
+	 * Tests using a transactional {@link Database}. Should still work.
+	 * 
+	 * @throws Exception
+	 *             error had occurred.
+	 */
+	@Test
+	public void testTransactional() throws Exception {
+		final EnvironmentConfig environmentConfig = new EnvironmentConfig();
+		environmentConfig.setAllowCreate(true);
+		environmentConfig.setTransactional(true);
+		final Environment env = new Environment(testDirectory,
+				environmentConfig);
+		final DatabaseConfig databaseConfig = new DatabaseConfig();
+		databaseConfig.setAllowCreate(true);
+		databaseConfig.setTransactional(true);
 		final Database db = env.openDatabase(null, "cache", databaseConfig);
 		final HttpClient httpClient = new CachingHttpClient(
 				new DefaultHttpClient(), new BerkeleyDBHttpCacheStorage(db),
