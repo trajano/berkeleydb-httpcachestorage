@@ -6,6 +6,9 @@ import java.io.IOException;
 import net.trajano.berkeleydbhttpcachestorage.BerkeleyDBHttpCacheStorage;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.client.cache.CacheConfig;
 import org.apache.http.impl.client.cache.CachingHttpClient;
@@ -45,6 +48,25 @@ public class BerkeleyDBHttpCacheStorageTest {
 		final Database db = env.openDatabase(null, "cache", databaseConfig);
 		new CachingHttpClient(new DefaultHttpClient(),
 				new BerkeleyDBHttpCacheStorage(db), new CacheConfig());
+		db.close();
+		env.close();
+	}
+
+	@Test
+	public void testDoRequest() throws Exception {
+		final EnvironmentConfig environmentConfig = new EnvironmentConfig();
+		environmentConfig.setAllowCreate(true);
+		final Environment env = new Environment(testDirectory,
+				environmentConfig);
+		final DatabaseConfig databaseConfig = new DatabaseConfig();
+		databaseConfig.setAllowCreate(true);
+		final Database db = env.openDatabase(null, "cache", databaseConfig);
+		final HttpClient httpClient = new CachingHttpClient(
+				new DefaultHttpClient(), new BerkeleyDBHttpCacheStorage(db),
+				new CacheConfig());
+
+		final HttpResponse response = httpClient.execute(new HttpGet(
+				"http://slashdot.org"));
 		db.close();
 		env.close();
 	}

@@ -23,8 +23,12 @@ public class BerkeleyDBHttpCacheStorageException extends IOException {
 		return key;
 	}
 
+	@Override
+	public String getMessage() {
+		return "key = " + key + " status = " + status;
+	}
+
 	public OperationStatus getStatus() {
 		return status;
 	}
-
 }

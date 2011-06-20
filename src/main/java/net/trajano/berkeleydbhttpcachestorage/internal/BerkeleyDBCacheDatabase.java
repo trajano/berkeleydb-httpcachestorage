@@ -71,7 +71,7 @@ public class BerkeleyDBCacheDatabase {
 			final OperationStatus status = database.delete(txn,
 					new DatabaseEntry(key.getBytes()));
 			if (status != OperationStatus.SUCCESS
-					|| status != OperationStatus.NOTFOUND) {
+					&& status != OperationStatus.NOTFOUND) {
 				throw new BerkeleyDBHttpCacheStorageException(key, status);
 			}
 		} catch (final DatabaseException e) {
