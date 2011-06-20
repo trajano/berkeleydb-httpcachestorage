@@ -44,7 +44,7 @@ public class TransactionalBerkeleyDBHttpCacheStorageTest {
 	 *            HTTP Client
 	 * @return time it took for the operation to complete in nanoseconds.
 	 * @throws IOException
-	 *             I/O error had occured.
+	 *             I/O error had occurred.
 	 */
 	private long doRequest(final HttpClient httpClient) throws IOException {
 		final long start = System.nanoTime();
