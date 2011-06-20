@@ -1,10 +1,12 @@
-package net.trajano.berkeleydbhttpcachestorage;
+package net.trajano.berkeleydbhttpcachestorage.internal;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+
+import net.trajano.berkeleydbhttpcachestorage.BerkleyDBHttpCacheStorageClassNotFoundException;
 
 import org.apache.http.client.cache.HttpCacheEntry;
 
