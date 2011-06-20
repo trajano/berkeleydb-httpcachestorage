@@ -1,6 +1,9 @@
 package net.trajano.berkeleydbhttpcachestorage;
 
 import java.io.IOException;
+import java.text.MessageFormat;
+
+import net.trajano.berkeleydbhttpcachestorage.internal.Messages;
 
 import com.sleepycat.je.OperationStatus;
 
@@ -55,7 +58,9 @@ public class BerkeleyDBHttpCacheStorageException extends IOException {
 	 */
 	@Override
 	public String getMessage() {
-		return "Database error on key = " + key + " status = " + status;
+		return MessageFormat.format(
+				Messages.getString("BerkeleyDBHttpCacheStorageException.msg"), //$NON-NLS-1$
+				key, status);
 	}
 
 	/**
