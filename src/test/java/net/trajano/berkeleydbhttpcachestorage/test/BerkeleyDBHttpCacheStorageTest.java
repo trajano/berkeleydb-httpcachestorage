@@ -130,6 +130,54 @@ public class BerkeleyDBHttpCacheStorageTest {
 	}
 
 	/**
+	 * Tests multiple requests, the second request should take less time.
+	 * 
+	 * @throws Exception
+	 *             error had occurred.
+	 */
+	@Test
+	public void testDoMultipleRequestOverTwo() throws Exception {
+		final long time1;
+		final CacheConfig cacheConfig = new CacheConfig();
+		cacheConfig.setHeuristicCachingEnabled(true);
+		cacheConfig.setSharedCache(true);
+		{
+			final EnvironmentConfig environmentConfig = new EnvironmentConfig();
+			environmentConfig.setAllowCreate(true);
+			final Environment env = new Environment(testDirectory,
+					environmentConfig);
+			final DatabaseConfig databaseConfig = new DatabaseConfig();
+			databaseConfig.setAllowCreate(true);
+			final Database db = env.openDatabase(null, "cache", databaseConfig);
+			final HttpClient httpClient = new CachingHttpClient(
+					new DefaultHttpClient(),
+					new BerkeleyDBHttpCacheStorage(db), cacheConfig);
+
+			time1 = doRequest(httpClient);
+			db.close();
+			env.close();
+		}
+		final long time2;
+		{
+			final EnvironmentConfig environmentConfig = new EnvironmentConfig();
+			environmentConfig.setAllowCreate(true);
+			final Environment env = new Environment(testDirectory,
+					environmentConfig);
+			final DatabaseConfig databaseConfig = new DatabaseConfig();
+			databaseConfig.setAllowCreate(true);
+			final Database db = env.openDatabase(null, "cache", databaseConfig);
+			final HttpClient httpClient = new CachingHttpClient(
+					new DefaultHttpClient(),
+					new BerkeleyDBHttpCacheStorage(db), cacheConfig);
+
+			time2 = doRequest(httpClient);
+			db.close();
+			env.close();
+		}
+		Assert.assertTrue(time2 <= time1);
+	}
+
+	/**
 	 * Tests a single request.
 	 * 
 	 * @throws Exception
