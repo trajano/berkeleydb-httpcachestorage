@@ -36,10 +36,13 @@ public class BerkeleyDBHttpCacheStorageTest {
 
 	@Test
 	public void testCreate() throws Exception {
+		final EnvironmentConfig environmentConfig = new EnvironmentConfig();
+		environmentConfig.setAllowCreate(true);
 		final Environment env = new Environment(testDirectory,
-				new EnvironmentConfig());
-		final Database db = env.openDatabase(null, "cache",
-				new DatabaseConfig());
+				environmentConfig);
+		final DatabaseConfig databaseConfig = new DatabaseConfig();
+		databaseConfig.setAllowCreate(true);
+		final Database db = env.openDatabase(null, "cache", databaseConfig);
 		new CachingHttpClient(new DefaultHttpClient(),
 				new BerkeleyDBHttpCacheStorage(db), new CacheConfig());
 		db.close();
