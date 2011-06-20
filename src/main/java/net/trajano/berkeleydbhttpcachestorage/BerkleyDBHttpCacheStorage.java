@@ -51,7 +51,7 @@ public class BerkleyDBHttpCacheStorage implements HttpCacheStorage {
 		try {
 			final DatabaseEntry data = new DatabaseEntry();
 			data.setData(HttpCacheEntrySerializer
-					.HttpCacheEntryToByteArray(entry));
+					.httpCacheEntryToByteArray(entry));
 			final OperationStatus status = database.put(null,
 					new DatabaseEntry(key.getBytes()), data);
 			if (status != OperationStatus.SUCCESS) {
@@ -63,15 +63,48 @@ public class BerkleyDBHttpCacheStorage implements HttpCacheStorage {
 	}
 
 	public void removeEntry(final String key) throws IOException {
-		// TODO Auto-generated method stub
+		try {
+			final OperationStatus status = database.delete(null,
+					new DatabaseEntry(key.getBytes()));
+			if (status != OperationStatus.SUCCESS
+					|| status != OperationStatus.NOTFOUND) {
+				throw new BerkleyDBHttpCacheStorageException(key, status);
+			}
+		} catch (final DatabaseException e) {
+			throw new IOException(e);
+		}
 
 	}
 
 	public void updateEntry(final String key,
 			final HttpCacheUpdateCallback callback) throws IOException,
 			HttpCacheUpdateException {
-		// TODO Auto-generated method stub
+		try {
+			final DatabaseEntry data = new DatabaseEntry();
+			// Made not final as this will get replaced.
+			HttpCacheEntry entry;
+			final OperationStatus status = database.get(null,
+					new DatabaseEntry(key.getBytes()), data, null);
+			if (status == OperationStatus.NOTFOUND) {
+				entry = null;
+			} else if (status == OperationStatus.SUCCESS) {
+				entry = HttpCacheEntrySerializer.byteArrayToHttpCacheEntry(data
+						.getData());
+			} else {
+				throw new BerkleyDBHttpCacheStorageException(key, status);
+			}
+			entry = callback.update(entry);
 
+			data.setData(HttpCacheEntrySerializer
+					.httpCacheEntryToByteArray(entry));
+			final OperationStatus putStatus = database.put(null,
+					new DatabaseEntry(key.getBytes()), data);
+			if (putStatus != OperationStatus.SUCCESS) {
+				throw new BerkleyDBHttpCacheStorageException(key, putStatus);
+			}
+		} catch (final DatabaseException e) {
+			throw new IOException(e);
+		}
 	}
 
 }
