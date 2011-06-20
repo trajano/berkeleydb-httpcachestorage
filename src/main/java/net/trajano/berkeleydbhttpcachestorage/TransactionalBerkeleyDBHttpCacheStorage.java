@@ -21,7 +21,7 @@ import com.sleepycat.je.Transaction;
  * @author TRAJAA2
  * 
  */
-public class TransactionalBerkleyDBHttpCacheStorage implements HttpCacheStorage {
+public class TransactionalBerkeleyDBHttpCacheStorage implements HttpCacheStorage {
 	/**
 	 * Berkeley Cache DB.
 	 */
@@ -39,7 +39,7 @@ public class TransactionalBerkleyDBHttpCacheStorage implements HttpCacheStorage 
 	 *            Berkeley DB environment.
 	 * @param database
 	 */
-	public TransactionalBerkleyDBHttpCacheStorage(
+	public TransactionalBerkeleyDBHttpCacheStorage(
 			final Environment environment, final Database database) {
 		this.environment = environment;
 		this.database = new BerkeleyDBCacheDatabase(database);
