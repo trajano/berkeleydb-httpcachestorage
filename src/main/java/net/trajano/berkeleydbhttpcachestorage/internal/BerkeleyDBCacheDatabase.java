@@ -66,9 +66,8 @@ public class BerkeleyDBCacheDatabase {
 	public HttpCacheEntry getEntry(final Transaction txn, final String key)
 			throws IOException {
 		final DatabaseEntry data = new DatabaseEntry();
-		final OperationStatus status = database.get(txn,
-				new DatabaseEntry(key.getBytes()), data,
-				LockMode.READ_COMMITTED);
+		final OperationStatus status = database.get(txn, new DatabaseEntry(
+				KeyUtil.entityKey(key)), data, LockMode.READ_COMMITTED);
 		if (status == OperationStatus.NOTFOUND) {
 			return null;
 		} else if (status == OperationStatus.SUCCESS) {
@@ -99,8 +98,8 @@ public class BerkeleyDBCacheDatabase {
 		final ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		serializer.writeTo(entry, baos);
 		data.setData(baos.toByteArray());
-		final OperationStatus status = database.put(txn,
-				new DatabaseEntry(key.getBytes()), data);
+		final OperationStatus status = database.put(txn, new DatabaseEntry(
+				KeyUtil.entityKey(key)), data);
 		if (status != OperationStatus.SUCCESS) {
 			throw new BerkeleyDBHttpCacheStorageException(key, status);
 		}
@@ -120,7 +119,7 @@ public class BerkeleyDBCacheDatabase {
 	public void removeEntry(final Transaction txn, final String key)
 			throws IOException {
 		final OperationStatus status = database.delete(txn, new DatabaseEntry(
-				key.getBytes()));
+				KeyUtil.entityKey(key)));
 		if (status != OperationStatus.SUCCESS
 				&& status != OperationStatus.NOTFOUND) {
 			throw new BerkeleyDBHttpCacheStorageException(key, status);
@@ -150,25 +149,31 @@ public class BerkeleyDBCacheDatabase {
 		HttpCacheEntry entry;
 		final Cursor cursor = database.openCursor(txn,
 				CursorConfig.READ_COMMITTED);
-		final OperationStatus status = cursor.getSearchKey(new DatabaseEntry(
-				key.getBytes()), data, LockMode.READ_COMMITTED);
-		if (status == OperationStatus.NOTFOUND) {
-			entry = null;
-		} else if (status == OperationStatus.SUCCESS) {
-			entry = serializer
-					.readFrom(new ByteArrayInputStream(data.getData()));
-		} else {
-			throw new BerkeleyDBHttpCacheStorageException(key, status);
-		}
-		entry = callback.update(entry);
+		try {
+			final OperationStatus status = cursor.getSearchKey(
+					new DatabaseEntry(KeyUtil.entityKey(key)), data,
+					LockMode.READ_COMMITTED);
+			if (status == OperationStatus.NOTFOUND) {
+				entry = null;
+			} else if (status == OperationStatus.SUCCESS) {
+				entry = serializer.readFrom(new ByteArrayInputStream(data
+						.getData()));
+			} else {
 
-		final ByteArrayOutputStream baos = new ByteArrayOutputStream(
-				data.getSize());
-		serializer.writeTo(entry, baos);
-		data.setData(baos.toByteArray());
-		final OperationStatus putStatus = cursor.putCurrent(data);
-		if (putStatus != OperationStatus.SUCCESS) {
-			throw new BerkeleyDBHttpCacheStorageException(key, putStatus);
+				throw new BerkeleyDBHttpCacheStorageException(key, status);
+			}
+			entry = callback.update(entry);
+
+			final ByteArrayOutputStream baos = new ByteArrayOutputStream(
+					data.getSize());
+			serializer.writeTo(entry, baos);
+			data.setData(baos.toByteArray());
+			final OperationStatus putStatus = cursor.putCurrent(data);
+			if (putStatus != OperationStatus.SUCCESS) {
+				throw new BerkeleyDBHttpCacheStorageException(key, putStatus);
+			}
+		} finally {
+			cursor.close();
 		}
 	}
 }
