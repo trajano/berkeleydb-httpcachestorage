@@ -1,6 +1,7 @@
 package net.trajano.berkeleydbhttpcachestorage;
 
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.cache.ResourceFactory;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.client.cache.CacheConfig;
 import org.apache.http.impl.client.cache.CachingHttpClient;
@@ -26,6 +27,12 @@ public class BerkeleyDBCachingHttpClient extends CachingHttpClient {
 				new BerkeleyDBHttpCacheStorage(database), new CacheConfig());
 	}
 
+	public BerkeleyDBCachingHttpClient(final Database database,
+			final CacheConfig cacheConfig) {
+		super(new DefaultHttpClient(),
+				new BerkeleyDBHttpCacheStorage(database), cacheConfig);
+	}
+
 	public BerkeleyDBCachingHttpClient(final HttpClient client,
 			final Database database) {
 		super(client, new BerkeleyDBHttpCacheStorage(database),
@@ -35,5 +42,12 @@ public class BerkeleyDBCachingHttpClient extends CachingHttpClient {
 	public BerkeleyDBCachingHttpClient(final HttpClient client,
 			final Database database, final CacheConfig cacheConfig) {
 		super(client, new BerkeleyDBHttpCacheStorage(database), cacheConfig);
+	}
+
+	public BerkeleyDBCachingHttpClient(final HttpClient client,
+			final ResourceFactory resourceFactory, final Database database,
+			final CacheConfig cacheConfig) {
+		super(client, resourceFactory,
+				new BerkeleyDBHttpCacheStorage(database), cacheConfig);
 	}
 }

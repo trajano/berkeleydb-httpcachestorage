@@ -2,12 +2,16 @@ package net.trajano.berkeleydbhttpcachestorage.test;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import net.trajano.berkeleydbhttpcachestorage.BerkeleyDBHttpCacheStorage;
+import net.trajano.berkeleydbhttpcachestorage.LogCacheStatusHttpResponseInterceptor;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.HttpResponseInterceptor;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.cache.CacheResponseStatus;
 import org.apache.http.client.methods.HttpGet;
@@ -56,8 +60,10 @@ public class BerkeleyDBHttpCacheStorageTest {
 	private long doRequest(final HttpClient httpClient) throws IOException {
 		final long start = System.nanoTime();
 		final HttpResponse response = httpClient
-				.execute(new HttpGet(
-						"http://www.gravatar.com/avatar/a798a3d661375ece15776f83fbb80c2c.png"));
+				.execute(
+						new HttpGet(
+								"http://www.gravatar.com/avatar/a798a3d661375ece15776f83fbb80c2c.png"),
+						new BasicHttpContext());
 		Assert.assertNotNull(response);
 		final HttpEntity entity = response.getEntity();
 		Assert.assertNotNull(entity);
@@ -250,6 +256,58 @@ public class BerkeleyDBHttpCacheStorageTest {
 			final Database db = env.openDatabase(null, "cache", databaseConfig);
 			final HttpClient httpClient = new CachingHttpClient(
 					new DefaultHttpClient(),
+					new BerkeleyDBHttpCacheStorage(db), cacheConfig);
+
+			time2 = doRequest(httpClient);
+			db.close();
+			env.close();
+		}
+		Assert.assertTrue(time2 <= time1);
+	}
+
+	/**
+	 * Tests multiple requests, the second request should take less time.
+	 * 
+	 * @throws Exception
+	 *             error had occurred.
+	 */
+	@Test
+	public void testDoMultipleRequestOverTwoWithLogging() throws Exception {
+		final Logger logger = Logger.getLogger(this.getClass().getName());
+		final long time1;
+		{
+			final EnvironmentConfig environmentConfig = new EnvironmentConfig();
+			environmentConfig.setAllowCreate(true);
+			final Environment env = new Environment(testDirectory,
+					environmentConfig);
+			final DatabaseConfig databaseConfig = new DatabaseConfig();
+			databaseConfig.setAllowCreate(true);
+			final Database db = env.openDatabase(null, "cache", databaseConfig);
+			final DefaultHttpClient client = new DefaultHttpClient();
+			final HttpResponseInterceptor interceptor = new LogCacheStatusHttpResponseInterceptor(
+					logger, Level.INFO);
+			client.addResponseInterceptor(interceptor);
+			final HttpClient httpClient = new CachingHttpClient(client,
+					new BerkeleyDBHttpCacheStorage(db), cacheConfig);
+
+			time1 = doRequest(httpClient);
+			db.close();
+			env.close();
+		}
+		final long time2;
+		{
+			final EnvironmentConfig environmentConfig = new EnvironmentConfig();
+			environmentConfig.setAllowCreate(true);
+			final Environment env = new Environment(testDirectory,
+					environmentConfig);
+			final DatabaseConfig databaseConfig = new DatabaseConfig();
+			databaseConfig.setAllowCreate(true);
+			final Database db = env.openDatabase(null, "cache", databaseConfig);
+			final DefaultHttpClient client = new DefaultHttpClient();
+			final HttpResponseInterceptor interceptor = new LogCacheStatusHttpResponseInterceptor(
+					logger, Level.INFO);
+			client.addResponseInterceptor(interceptor);
+			final HttpClient httpClient = new CachingHttpClient(client,
 					new BerkeleyDBHttpCacheStorage(db), cacheConfig);
 
 			time2 = doRequest(httpClient);
