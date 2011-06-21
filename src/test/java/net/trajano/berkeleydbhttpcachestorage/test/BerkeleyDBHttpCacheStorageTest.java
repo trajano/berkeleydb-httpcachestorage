@@ -9,10 +9,13 @@ import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.cache.CacheResponseStatus;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.client.cache.CacheConfig;
 import org.apache.http.impl.client.cache.CachingHttpClient;
+import org.apache.http.protocol.BasicHttpContext;
+import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import org.junit.After;
 import org.junit.Assert;
@@ -31,6 +34,11 @@ import com.sleepycat.je.EnvironmentConfig;
  * 
  */
 public class BerkeleyDBHttpCacheStorageTest {
+	/**
+	 * Cache configuration;
+	 */
+	private CacheConfig cacheConfig = null;
+
 	/**
 	 * Test directory.
 	 */
@@ -58,7 +66,7 @@ public class BerkeleyDBHttpCacheStorageTest {
 	}
 
 	/**
-	 * Creates the test directory.
+	 * Creates the test directory. Also sets the {@link CacheConfig}.
 	 * 
 	 * @throws IOException
 	 *             I/O error had occurred.
@@ -68,6 +76,12 @@ public class BerkeleyDBHttpCacheStorageTest {
 		FileUtils.deleteDirectory(testDirectory);
 		Assert.assertTrue(testDirectory.mkdirs());
 		Assert.assertTrue(testDirectory.exists());
+
+		cacheConfig = new CacheConfig();
+		cacheConfig.setHeuristicCachingEnabled(true);
+		cacheConfig.setSharedCache(true);
+		cacheConfig.setMaxObjectSizeBytes(Integer.MAX_VALUE);
+
 	}
 
 	/**
@@ -98,7 +112,7 @@ public class BerkeleyDBHttpCacheStorageTest {
 		databaseConfig.setAllowCreate(true);
 		final Database db = env.openDatabase(null, "cache", databaseConfig);
 		new CachingHttpClient(new DefaultHttpClient(),
-				new BerkeleyDBHttpCacheStorage(db), new CacheConfig());
+				new BerkeleyDBHttpCacheStorage(db), cacheConfig);
 		db.close();
 		env.close();
 	}
@@ -120,7 +134,7 @@ public class BerkeleyDBHttpCacheStorageTest {
 		final Database db = env.openDatabase(null, "cache", databaseConfig);
 		final HttpClient httpClient = new CachingHttpClient(
 				new DefaultHttpClient(), new BerkeleyDBHttpCacheStorage(db),
-				new CacheConfig());
+				cacheConfig);
 
 		final long time1 = doRequest(httpClient);
 		final long time2 = doRequest(httpClient);
@@ -136,11 +150,79 @@ public class BerkeleyDBHttpCacheStorageTest {
 	 *             error had occurred.
 	 */
 	@Test
-	public void testDoMultipleRequestOverTwo() throws Exception {
+	public void testDoMultipleRequestOverTwoByStatus() throws Exception {
+		{
+			final EnvironmentConfig environmentConfig = new EnvironmentConfig();
+			environmentConfig.setAllowCreate(true);
+			final Environment env = new Environment(testDirectory,
+					environmentConfig);
+			final DatabaseConfig databaseConfig = new DatabaseConfig();
+			databaseConfig.setAllowCreate(true);
+			final Database db = env.openDatabase(null, "cache", databaseConfig);
+			final HttpClient httpClient = new CachingHttpClient(
+					new DefaultHttpClient(),
+					new BerkeleyDBHttpCacheStorage(db), cacheConfig);
+
+			final HttpContext localContext = new BasicHttpContext();
+			final HttpResponse response = httpClient
+					.execute(
+							new HttpGet(
+									"http://www.gravatar.com/avatar/a798a3d661375ece15776f83fbb80c2c.png"),
+							localContext);
+			Assert.assertNotNull(response);
+			final HttpEntity entity = response.getEntity();
+			Assert.assertNotNull(entity);
+			EntityUtils.toByteArray(entity);
+
+			final CacheResponseStatus responseStatus = (CacheResponseStatus) localContext
+					.getAttribute(CachingHttpClient.CACHE_RESPONSE_STATUS);
+
+			Assert.assertEquals(CacheResponseStatus.CACHE_MISS, responseStatus);
+
+			db.close();
+			env.close();
+		}
+		{
+			final EnvironmentConfig environmentConfig = new EnvironmentConfig();
+			environmentConfig.setAllowCreate(true);
+			final Environment env = new Environment(testDirectory,
+					environmentConfig);
+			final DatabaseConfig databaseConfig = new DatabaseConfig();
+			databaseConfig.setAllowCreate(true);
+			final Database db = env.openDatabase(null, "cache", databaseConfig);
+			final HttpClient httpClient = new CachingHttpClient(
+					new DefaultHttpClient(),
+					new BerkeleyDBHttpCacheStorage(db), cacheConfig);
+
+			final HttpContext localContext = new BasicHttpContext();
+			final HttpResponse response = httpClient
+					.execute(
+							new HttpGet(
+									"http://www.gravatar.com/avatar/a798a3d661375ece15776f83fbb80c2c.png"),
+							localContext);
+			Assert.assertNotNull(response);
+			final HttpEntity entity = response.getEntity();
+			Assert.assertNotNull(entity);
+			EntityUtils.toByteArray(entity);
+
+			final CacheResponseStatus responseStatus = (CacheResponseStatus) localContext
+					.getAttribute(CachingHttpClient.CACHE_RESPONSE_STATUS);
+
+			Assert.assertEquals(CacheResponseStatus.CACHE_HIT, responseStatus);
+			db.close();
+			env.close();
+		}
+	}
+
+	/**
+	 * Tests multiple requests, the second request should take less time.
+	 * 
+	 * @throws Exception
+	 *             error had occurred.
+	 */
+	@Test
+	public void testDoMultipleRequestOverTwoByTime() throws Exception {
 		final long time1;
-		final CacheConfig cacheConfig = new CacheConfig();
-		cacheConfig.setHeuristicCachingEnabled(true);
-		cacheConfig.setSharedCache(true);
 		{
 			final EnvironmentConfig environmentConfig = new EnvironmentConfig();
 			environmentConfig.setAllowCreate(true);
